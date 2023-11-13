@@ -1,0 +1,14 @@
+[Unit]
+Description=Telegram Bot
+After=network.target
+
+[Service]
+User=str
+Group=str
+
+WorkingDirectory=/home/str/Tg_magaz3/
+Environment="PYTHONPATH=/home/str/Tg_magaz3/"
+ExecStart=/home/str/Tg_magaz3/.venv/bin/python /home/str/Tg_magaz3/bot_main.py
+
+[Install]
+WantedBy=multi-user.target
