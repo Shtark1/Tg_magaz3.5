@@ -466,9 +466,9 @@ def bot_init(event_loop, token, number_bot):
             for idx, districts in enumerate(all_district[2].split("|")):
                 if f"🏘 {districts.split('[')[0]}\nЖми 👉 " not in text:
                     if districts.split('[')[0] not in products_dop:
-                        btn['keyboard'].insert(i, [{'text': f'{districts.split("[")[0]} /districts_{id_product[1]}_{districts.split("[")[1][:-1]}'}])
+                        btn['keyboard'].insert(i, [{'text': f'{districts.split("[")[0]} /districts_{id_product[1]}_{idx}'}])
                         i += 1
-                        text += f"🏘 {districts.split('[')[0]}</i>\n<b>+ скидка до {discount_product}%</b>\n<i>Жми 👉 /districts_{id_product[1]}_{districts.split('[')[1][:-1]}\n- - - - - - - - - - - - - - - -\n"
+                        text += f"🏘 {districts.split('[')[0]}</i>\n<b>+ скидка до {discount_product}%</b>\n<i>Жми 👉 /districts_{id_product[1]}_{idx}\n- - - - - - - - - - - - - - - -\n"
                 products_dop += [districts.split('[')[0]]
             text = "\n".join(text.split("\n")[:-2]) + "\n"
             await message.answer(MESSAGES["get_district"] % (all_district[1], text), reply_markup=btn)
