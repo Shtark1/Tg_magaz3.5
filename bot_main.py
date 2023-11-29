@@ -1,10 +1,7 @@
-import requests
 import subprocess
-from datetime import datetime
 
 from aiogram.utils import executor
 from aiogram.dispatcher import Dispatcher
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from create_main_bot import dp
 from cfg.database import Database
