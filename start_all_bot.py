@@ -481,55 +481,94 @@ def bot_init(event_loop, token, number_bot):
             id_product = message.text.split("/")[-1].split("_")
             discount_product = db.get_all_info("DISCOUNT")[0]
             dop_districts = db.get_keyboard_city_id(id_product[1])[3].split("|")
+            all_districts = db.get_keyboard_city_id(id_product[1])[2].split("|")
             text = ""
             btn = {'keyboard': [[{'text': '🏠 Меню'}], [{'text': '📦 Все продукты'}, {'text': '👉 Локации'}],[{'text': '💰 Мой последний заказ'}, {'text': '❓ Помощь'}], [{'text': '💰 Баланс'}, {'text': '💰 Пополнить баланс'}]], 'resize_keyboard': True}
             i = 0
             try:
-                for idx, dop_district in enumerate(dop_districts):
-                    id_dop_district = dop_district.split("[")[1][0:-1]
-                    if str(id_product[3]) == str(id_dop_district):
-                        btn['keyboard'].insert(i, [{'text': f'{dop_districts[idx].split("[")[0]} /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}'}])
-                        text += f"🚩 {dop_districts[idx].split('[')[0]}</i>\n<b>+ скидка до {discount_product}%</b>\n<i>Выбрать 👉 /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}\n- - - - - - - - - - - - - - - -\n"
-                        i += 1
-                if text:
-                    product_db = db.get_keyboard_city_id(id_product[1])[0].split("|")[int(id_product[2])].split("(")
-                    city_product = db.get_keyboard_city_id(id_product[1])
+                if len(id_product) == 3:
+                    idx_my_distr = []
+                    for district in all_districts:
+                        if all_districts[int(id_product[2])].split("[")[0] in district:
+                            idx_my_distr += [district.split("[")[1][:-1]]
+
+                    for idx, dop_district in enumerate(dop_districts):
+                        if dop_district.split("[")[1][:-1] in idx_my_distr:
+                            if dop_district.split("[")[0] not in text:
+                                btn['keyboard'].insert(i, [{'text': f'{dop_district.split("[")[0]} /districts_{id_product[1]}_{id_product[2]}_{idx}'}])
+                                text += f"🚩 {dop_district.split('[')[0]}</i>\n<b>+ скидка до {discount_product}%</b>\n<i>Выбрать 👉 /districts_{id_product[1]}_{id_product[2]}_{idx}\n- - - - - - - - - - - - - - - -\n"
+                                i += 1
                     text = "\n".join(text.split("\n")[:-2]) + "\n"
-                    await message.answer(MESSAGES["add_district"] % (product_db[0], product_db[1][:-1], city_product[1], text), reply_markup=btn)
-                else:
+                    await message.answer(MESSAGES["get_district"] % (all_districts[int(id_product[2])], text), reply_markup=btn)
+
+                elif len(id_product) == 4:
                     all_district = db.get_keyboard_city_id(id_product[1])
                     text = ""
                     btn = {'keyboard': [[{'text': '🏠 Меню'}], [{'text': '📦 Все продукты'}, {'text': '👉 Локации'}], [{'text': '💰 Мой последний заказ'}, {'text': '❓ Помощь'}], [{'text': '💰 Баланс'}, {'text': '💰 Пополнить баланс'}]], 'resize_keyboard': True}
                     my_id_product = []
-                    for my_district in all_district[2].split("|"):
-                        if all_district[2].split("|")[int(id_product[2])][:-3] in my_district:
-                            my_id_product += [int(my_district[-2])]
-                    i = 0
+                    for my_dop_district in all_district[3].split("|"):
+                        if all_district[3].split("|")[int(id_product[3])].split("[")[0] in my_dop_district:
+                            my_id_product += [int(my_dop_district[-2])]
+
                     discount_product = db.get_all_info("DISCOUNT")[0]
                     for idx, products in enumerate(all_district[0].split("|")):
                         if idx in my_id_product:
-                            btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}'}])
+                            btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}'}])
                             i += 1
-                            text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{idx}_{id_product[2]}</i>\n- - - - - - - - - - - - - - - -\n"
+                            text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}</i>\n- - - - - - - - - - - - - - - -\n"
                     text = "\n".join(text.split("\n")[:-2]) + "\n"
-                    await message.answer(MESSAGES["get_product"] % (all_district[2].split("|")[int(id_product[2])][:-3], text), reply_markup=btn)
-            except:
-                all_district = db.get_keyboard_city_id(id_product[1])
-                text = ""
-                btn = {'keyboard': [[{'text': '🏠 Меню'}], [{'text': '📦 Все продукты'}, {'text': '👉 Локации'}], [{'text': '💰 Мой последний заказ'}, {'text': '❓ Помощь'}], [{'text': '💰 Баланс'}, {'text': '💰 Пополнить баланс'}]], 'resize_keyboard': True}
-                my_id_product = []
-                for my_district in all_district[2].split("|"):
-                    if all_district[2].split("|")[int(id_product[2])][:-3] in my_district:
-                        my_id_product += [int(my_district[-2])]
-                i = 0
-                discount_product = db.get_all_info("DISCOUNT")[0]
-                for idx, products in enumerate(all_district[0].split("|")):
-                    if idx in my_id_product:
-                        btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}'}])
-                        i += 1
-                        text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{idx}_{id_product[2]}</i>\n- - - - - - - - - - - - - - - -\n"
-                text = "\n".join(text.split("\n")[:-2]) + "\n"
-                await message.answer(MESSAGES["get_product"] % (all_district[2].split("|")[int(id_product[2])][:-3], text), reply_markup=btn)
+                    await message.answer(MESSAGES["get_product"] % (dop_districts[int(id_product[3])].split("[")[0], text), reply_markup=btn)
+                else:
+                    await message.answer("Ошибка!\nТакого города нет!")
+            except Exception as ex:
+                await message.answer("Ошибка!\nТакого города нет!")
+
+            # try:
+            #     for idx, dop_district in enumerate(dop_districts):
+            #         id_dop_district = dop_district.split("[")[1][0:-1]
+            #         if str(id_product[3]) == str(id_dop_district):
+            #             btn['keyboard'].insert(i, [{'text': f'{dop_districts[idx].split("[")[0]} /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}'}])
+            #             text += f"🚩 {dop_districts[idx].split('[')[0]}</i>\n<b>+ скидка до {discount_product}%</b>\n<i>Выбрать 👉 /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}\n- - - - - - - - - - - - - - - -\n"
+            #             i += 1
+            #     if text:
+            #         product_db = db.get_keyboard_city_id(id_product[1])[0].split("|")[int(id_product[2])].split("(")
+            #         city_product = db.get_keyboard_city_id(id_product[1])
+            #         text = "\n".join(text.split("\n")[:-2]) + "\n"
+            #         await message.answer(MESSAGES["add_district"] % (product_db[0], product_db[1][:-1], city_product[1], text), reply_markup=btn)
+            #     else:
+            #         all_district = db.get_keyboard_city_id(id_product[1])
+            #         text = ""
+            #         btn = {'keyboard': [[{'text': '🏠 Меню'}], [{'text': '📦 Все продукты'}, {'text': '👉 Локации'}], [{'text': '💰 Мой последний заказ'}, {'text': '❓ Помощь'}], [{'text': '💰 Баланс'}, {'text': '💰 Пополнить баланс'}]], 'resize_keyboard': True}
+            #         my_id_product = []
+            #         for my_district in all_district[2].split("|"):
+            #             if all_district[2].split("|")[int(id_product[2])][:-3] in my_district:
+            #                 my_id_product += [int(my_district[-2])]
+            #         i = 0
+            #         discount_product = db.get_all_info("DISCOUNT")[0]
+            #         for idx, products in enumerate(all_district[0].split("|")):
+            #             if idx in my_id_product:
+            #                 btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}'}])
+            #                 i += 1
+            #                 text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{idx}_{id_product[2]}</i>\n- - - - - - - - - - - - - - - -\n"
+            #         text = "\n".join(text.split("\n")[:-2]) + "\n"
+            #         await message.answer(MESSAGES["get_product"] % (all_district[2].split("|")[int(id_product[2])][:-3], text), reply_markup=btn)
+            # except:
+            #     all_district = db.get_keyboard_city_id(id_product[1])
+            #     text = ""
+            #     btn = {'keyboard': [[{'text': '🏠 Меню'}], [{'text': '📦 Все продукты'}, {'text': '👉 Локации'}], [{'text': '💰 Мой последний заказ'}, {'text': '❓ Помощь'}], [{'text': '💰 Баланс'}, {'text': '💰 Пополнить баланс'}]], 'resize_keyboard': True}
+            #     my_id_product = []
+            #     for my_district in all_district[2].split("|"):
+            #         if all_district[2].split("|")[int(id_product[2])][:-3] in my_district:
+            #             my_id_product += [int(my_district[-2])]
+            #     i = 0
+            #     discount_product = db.get_all_info("DISCOUNT")[0]
+            #     for idx, products in enumerate(all_district[0].split("|")):
+            #         if idx in my_id_product:
+            #             btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}'}])
+            #             i += 1
+            #             text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{idx}_{id_product[2]}</i>\n- - - - - - - - - - - - - - - -\n"
+            #     text = "\n".join(text.split("\n")[:-2]) + "\n"
+            #     await message.answer(MESSAGES["get_product"] % (all_district[2].split("|")[int(id_product[2])][:-3], text), reply_markup=btn)
         except:
             await message.answer("Ошибка!\nТакого района нет!")
 
