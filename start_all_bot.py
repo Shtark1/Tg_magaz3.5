@@ -51,7 +51,7 @@ def bot_init(event_loop, token, number_bot):
                     await bot.send_message(text=MESSAGES[f"start_user_{number_bot}"], chat_id=message.from_user.id, reply_markup=BUTTON_TYPES["BTN_HOME"])
                     await state.finish()
                 else:
-                    captcha_text = os.listdir(path="img")[4:][random.randint(0, 9)][0:-4]
+                    captcha_text = os.listdir(path="img")[random.randint(0, 9)][0:-4]
                     with open(f'img/{captcha_text}.jpg', 'rb') as photo:
                         await bot.send_photo(chat_id=message.chat.id, photo=photo, caption=MESSAGES["captha"])
                     await state.update_data(captha=captcha_text)
@@ -61,7 +61,7 @@ def bot_init(event_loop, token, number_bot):
                     db.add_user(message.from_user.id, message.from_user.username)
                     print(str(db.get_all_info("CAPTHA")))
                     if str(db.get_all_info("CAPTHA")[0]) == "True":
-                        captcha_text = os.listdir(path="img")[4:][random.randint(0, 9)][0:-4]
+                        captcha_text = os.listdir(path="img")[random.randint(0, 9)][0:-4]
                         with open(f'img/{captcha_text}.jpg', 'rb') as photo:
                             await bot.send_photo(chat_id=message.chat.id, photo=photo, caption=MESSAGES["captha"])
                         await state.update_data(captha=captcha_text)
@@ -80,7 +80,7 @@ def bot_init(event_loop, token, number_bot):
             await bot.send_message(text=MESSAGES[f"start_user_{number_bot}"], chat_id=message.from_user.id, reply_markup=BUTTON_TYPES["BTN_HOME"])
             await state.finish()
         else:
-            captcha_text = os.listdir(path="img")[4:][random.randint(0, 9)][0:-4]
+            captcha_text = os.listdir(path="img")[random.randint(0, 9)][0:-4]
             with open(f'img/{captcha_text}.jpg', 'rb') as photo:
                 await bot.send_photo(chat_id=message.chat.id, photo=photo, caption=MESSAGES["captha"])
             await state.update_data(captha=captcha_text)
@@ -579,7 +579,7 @@ def bot_init(event_loop, token, number_bot):
         if not bool(len(db.user_exists(message.from_user.id))):
             db.add_user(message.from_user.id, message.from_user.username)
             if str(db.get_all_info("CAPTHA")[0]) == "True":
-                captcha_text = os.listdir(path="img")[4:][random.randint(0, 9)][0:-4]
+                captcha_text = os.listdir(path="img")[random.randint(0, 9)][0:-4]
                 with open(f'img/{captcha_text}.jpg', 'rb') as photo:
                     await bot.send_photo(chat_id=message.chat.id, photo=photo, caption=MESSAGES["captha"])
                 state = dp.current_state(user=message.from_user.id)
