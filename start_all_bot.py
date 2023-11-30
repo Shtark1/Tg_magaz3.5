@@ -155,7 +155,7 @@ def bot_init(event_loop, token, number_bot):
         NUMBER_ETH = db.get_all_info("NUMBER_ETH")[0].split("|")
         all_number = [NUMBER_CARD, NUMBER_LTC, NUMBER_BTC, NUMBER_ETH]
         data = await state.get_data()
-        if "/up_balance_1" in message.text:
+        if "/up_balance_1" in message.text or "/up_balance_0" in message.text:
             rub_coin = int(data['count_top_up'])
         else:
             rub_coin = f"{float(convert_rub_to_btc(int(data['count_top_up']), all_type_pay[int(num_pay[2])-1])):.8f}"
@@ -397,16 +397,23 @@ def bot_init(event_loop, token, number_bot):
             NUMBER_LTC = db.get_all_info("NUMBER_LTC")[0].split("|")
             NUMBER_BTC = db.get_all_info("NUMBER_BTC")[0].split("|")
             NUMBER_ETH = db.get_all_info("NUMBER_ETH")[0].split("|")
-            all_number = [NUMBER_CARD, NUMBER_LTC, NUMBER_BTC, NUMBER_ETH]
-            num_coin = all_number[int(id_product[2])-1][randrange(len(all_number[int(id_product[2])-1]))]
+            if f"/buy_product_12" not in message.text:
+                all_number = [NUMBER_CARD, NUMBER_LTC, NUMBER_BTC, NUMBER_ETH]
+                num_coin = all_number[int(id_product[2])-1][randrange(len(all_number[int(id_product[2])-1]))]
+
             number_order = int(db.get_all_info("NUM_ORDER")[0]) + int(random.randint(11, 39))
             db.update_num_order(number_order)
-            if "/buy_product_1" in message.text:
+
+            if "/buy_product_1" in message.text or "/buy_product_12" in message.text:
                 discount_price = int(int(discount_price) + (int(discount_price) * db.get_all_info("COMMISSION")[0] / 100))
                 rub_coin = discount_price
             else:
                 rub_coin = f"{float(convert_rub_to_btc(discount_price, all_type_pay[int(id_product[2]) - 1])):.8f}"
-            await message.answer(MESSAGES[f"buy_product_{id_product[2]}"] % (f"{price_product[0]}", district_name, number_order, num_coin, rub_coin), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
+
+            if f"/buy_product_12" not in message.text:
+                await message.answer(MESSAGES[f"buy_product_{id_product[2]}"] % (f"{price_product[0]}", district_name, number_order, num_coin, rub_coin), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
+            else:
+                await message.answer(MESSAGES[f"buy_product_{id_product[2]}"] % (f"{price_product[0]}", rub_coin, district_name, number_order, rub_coin, number_order), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
 
             state = dp.current_state(user=message.from_user.id)
             now_plus_30 = datetime.now() + timedelta(minutes=60)
@@ -420,12 +427,20 @@ def bot_init(event_loop, token, number_bot):
 
             if datetime.now().minute + 15 > 60:
                 min_date = datetime.now().minute + 15 - 60
-                scheduler.add_job(napominalca_15, trigger='cron', hour=datetime.now().hour + 1, minute=min_date, start_date=datetime.now(), kwargs={"data": data, "message": message}, id=f"{number_order}")
+                if datetime.now().hour + 1 > 24:
+                    hour_date = datetime.now().hour + 1 - 24
+                else:
+                    hour_date = datetime.now().hour + 1
+                scheduler.add_job(napominalca_15, trigger='cron', hour=hour_date, minute=min_date, start_date=datetime.now(), kwargs={"data": data, "message": message}, id=f"{number_order}")
             else:
                 scheduler.add_job(napominalca_15, trigger='cron', hour=datetime.now().hour, minute=datetime.now().minute + 15, start_date=datetime.now(), kwargs={"data": data, "message": message}, id=f"{number_order}")
             if datetime.now().minute + 30 > 60:
+                if datetime.now().hour + 1 > 24:
+                    hour_date = datetime.now().hour + 1 - 24
+                else:
+                    hour_date = datetime.now().hour + 1
                 min_date = datetime.now().minute + 30 - 60
-                scheduler.add_job(napominalca_15, trigger='cron', hour=datetime.now().hour + 1, minute=min_date, start_date=datetime.now(), kwargs={"data": data, "message": message}, id=f"{number_order + 1}")
+                scheduler.add_job(napominalca_15, trigger='cron', hour=hour_date, minute=min_date, start_date=datetime.now(), kwargs={"data": data, "message": message}, id=f"{number_order + 1}")
             else:
                 scheduler.add_job(napominalca_15, trigger='cron', hour=datetime.now().hour, minute=datetime.now().minute + 30, start_date=datetime.now(), kwargs={"data": data, "message": message}, id=f"{number_order + 1}")
 
@@ -499,7 +514,7 @@ def bot_init(event_loop, token, number_bot):
                                 text += f"🚩 {dop_district.split('[')[0]}</i>\n<b>+ скидка до {discount_product}%</b>\n<i>Выбрать 👉 /districts_{id_product[1]}_{id_product[2]}_{idx}\n- - - - - - - - - - - - - - - -\n"
                                 i += 1
                     text = "\n".join(text.split("\n")[:-2]) + "\n"
-                    await message.answer(MESSAGES["get_district"] % (all_districts[int(id_product[2])], text), reply_markup=btn)
+                    await message.answer(MESSAGES["get_district"] % (all_districts[int(id_product[2])].split("[")[0], text), reply_markup=btn)
 
                 elif len(id_product) == 4:
                     all_district = db.get_keyboard_city_id(id_product[1])
@@ -522,53 +537,6 @@ def bot_init(event_loop, token, number_bot):
                     await message.answer("Ошибка!\nТакого города нет!")
             except Exception as ex:
                 await message.answer("Ошибка!\nТакого города нет!")
-
-            # try:
-            #     for idx, dop_district in enumerate(dop_districts):
-            #         id_dop_district = dop_district.split("[")[1][0:-1]
-            #         if str(id_product[3]) == str(id_dop_district):
-            #             btn['keyboard'].insert(i, [{'text': f'{dop_districts[idx].split("[")[0]} /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}'}])
-            #             text += f"🚩 {dop_districts[idx].split('[')[0]}</i>\n<b>+ скидка до {discount_product}%</b>\n<i>Выбрать 👉 /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}\n- - - - - - - - - - - - - - - -\n"
-            #             i += 1
-            #     if text:
-            #         product_db = db.get_keyboard_city_id(id_product[1])[0].split("|")[int(id_product[2])].split("(")
-            #         city_product = db.get_keyboard_city_id(id_product[1])
-            #         text = "\n".join(text.split("\n")[:-2]) + "\n"
-            #         await message.answer(MESSAGES["add_district"] % (product_db[0], product_db[1][:-1], city_product[1], text), reply_markup=btn)
-            #     else:
-            #         all_district = db.get_keyboard_city_id(id_product[1])
-            #         text = ""
-            #         btn = {'keyboard': [[{'text': '🏠 Меню'}], [{'text': '📦 Все продукты'}, {'text': '👉 Локации'}], [{'text': '💰 Мой последний заказ'}, {'text': '❓ Помощь'}], [{'text': '💰 Баланс'}, {'text': '💰 Пополнить баланс'}]], 'resize_keyboard': True}
-            #         my_id_product = []
-            #         for my_district in all_district[2].split("|"):
-            #             if all_district[2].split("|")[int(id_product[2])][:-3] in my_district:
-            #                 my_id_product += [int(my_district[-2])]
-            #         i = 0
-            #         discount_product = db.get_all_info("DISCOUNT")[0]
-            #         for idx, products in enumerate(all_district[0].split("|")):
-            #             if idx in my_id_product:
-            #                 btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}'}])
-            #                 i += 1
-            #                 text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{idx}_{id_product[2]}</i>\n- - - - - - - - - - - - - - - -\n"
-            #         text = "\n".join(text.split("\n")[:-2]) + "\n"
-            #         await message.answer(MESSAGES["get_product"] % (all_district[2].split("|")[int(id_product[2])][:-3], text), reply_markup=btn)
-            # except:
-            #     all_district = db.get_keyboard_city_id(id_product[1])
-            #     text = ""
-            #     btn = {'keyboard': [[{'text': '🏠 Меню'}], [{'text': '📦 Все продукты'}, {'text': '👉 Локации'}], [{'text': '💰 Мой последний заказ'}, {'text': '❓ Помощь'}], [{'text': '💰 Баланс'}, {'text': '💰 Пополнить баланс'}]], 'resize_keyboard': True}
-            #     my_id_product = []
-            #     for my_district in all_district[2].split("|"):
-            #         if all_district[2].split("|")[int(id_product[2])][:-3] in my_district:
-            #             my_id_product += [int(my_district[-2])]
-            #     i = 0
-            #     discount_product = db.get_all_info("DISCOUNT")[0]
-            #     for idx, products in enumerate(all_district[0].split("|")):
-            #         if idx in my_id_product:
-            #             btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}'}])
-            #             i += 1
-            #             text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{idx}_{id_product[2]}</i>\n- - - - - - - - - - - - - - - -\n"
-            #     text = "\n".join(text.split("\n")[:-2]) + "\n"
-            #     await message.answer(MESSAGES["get_product"] % (all_district[2].split("|")[int(id_product[2])][:-3], text), reply_markup=btn)
         except:
             await message.answer("Ошибка!\nТакого района нет!")
 
