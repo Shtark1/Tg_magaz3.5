@@ -169,9 +169,9 @@ def bot_init(event_loop, token, number_bot):
             text = f"""💰 Вы сформировали заявку на пополнение баланса на сумму {data['count_top_up']} руб.
 До конца резерва осталось 60мин.\n"""
             await message.answer(text + MESSAGES[f"data_pay_{num_pay[2]}"] % (number_order, all_number[int(num_pay[2])-1][randrange(len(all_number[int(num_pay[2])-1]))], rub_coin), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
-            await state.set_state(StatesUsers.all()[4])
         else:
             await message.answer(MESSAGES[f"data_pay_{num_pay[2]}"] % (rub_coin, number_order), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
+        await state.set_state(StatesUsers.all()[4])
 
         data = await state.get_data()
         if datetime.now().minute + 15 > 60:
@@ -217,7 +217,13 @@ def bot_init(event_loop, token, number_bot):
                 text = f"""❗️ Напоминаем,
 что вы сформировали заявку на пополнение баланса на сумму {data['count_top_up']} руб.
 До конца резерва осталось {time_left} минут.\n"""
-                await message.answer(text + MESSAGES[data['mess']] % (data['number_order'], data['number_coin'], data['rub_coin']), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
+                try:
+                    await message.answer(text + MESSAGES[data['mess']] % (data['number_order'], data['number_coin'], data['rub_coin']), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
+                except Exception as ex:
+                    if data['mess'] == "data_pay_12":
+                        await message.answer(text + MESSAGES[f"{data['mess']}"] % (data['number_order'], data['number_order']), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
+                    else:
+                        await message.answer(text + MESSAGES[f"{data['mess']}1"] % (data['number_order'], data['number_order']), reply_markup=BUTTON_TYPES["BTN_HOME_2"])
                 await state.set_state(StatesUsers.all()[4])
 
     # ================= ОТМЕНА ОПЛАТЫ ================
@@ -389,6 +395,7 @@ def bot_init(event_loop, token, number_bot):
         if "/buy_product_0" in message.text:
             await message.answer(MESSAGES["balance_pay"] % price_product[1][:-1])
         else:
+            print(id_product)
             if len(id_product) == 6:
                 district_name = db.get_keyboard_city_id(id_product[3])[2].split("|")[int(id_product[5])].split("[")[0]
             else:
@@ -400,7 +407,8 @@ def bot_init(event_loop, token, number_bot):
             if f"/buy_product_12" not in message.text:
                 all_number = [NUMBER_CARD, NUMBER_LTC, NUMBER_BTC, NUMBER_ETH]
                 num_coin = all_number[int(id_product[2])-1][randrange(len(all_number[int(id_product[2])-1]))]
-
+            else:
+                num_coin = ""
             number_order = int(db.get_all_info("NUM_ORDER")[0]) + int(random.randint(11, 39))
             db.update_num_order(number_order)
 
@@ -528,9 +536,10 @@ def bot_init(event_loop, token, number_bot):
                     discount_product = db.get_all_info("DISCOUNT")[0]
                     for idx, products in enumerate(all_district[0].split("|")):
                         if idx in my_id_product:
-                            btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}'}])
+                            # Город продукт район подрайон
+                            btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}_{id_product[3]}'}])
                             i += 1
-                            text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{id_product[2]}_{id_product[3]}_{idx}</i>\n- - - - - - - - - - - - - - - -\n"
+                            text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{id_product[2]}_{idx}_{id_product[3]}</i>\n- - - - - - - - - - - - - - - -\n"
                     text = "\n".join(text.split("\n")[:-2]) + "\n"
                     await message.answer(MESSAGES["get_product"] % (dop_districts[int(id_product[3])].split("[")[0], text), reply_markup=btn)
                 else:
