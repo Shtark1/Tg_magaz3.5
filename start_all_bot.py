@@ -390,7 +390,7 @@ def bot_init(event_loop, token, number_bot):
     # =============== ОПЛАТА ТОВАРА ===============
     async def buy_product_task(message: Message):
         id_product = message.text.split("/")[-1].split("_")
-        price_product = db.get_keyboard_city_id(id_product[3])[0].split("|")[int(id_product[4])].split("(")
+        price_product = db.get_keyboard_city_id(id_product[3])[0].split("|")[int(id_product[5])].split("(")
         discount_price = int(int(price_product[1][:-4]) - (int(db.get_all_info("DISCOUNT")[0]) / 100 * int(price_product[1][:-4])))
         if "/buy_product_0" in message.text:
             await message.answer(MESSAGES["balance_pay"] % price_product[1][:-1])
