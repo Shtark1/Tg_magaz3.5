@@ -537,7 +537,7 @@ def bot_init(event_loop, token, number_bot):
                     for idx, products in enumerate(all_district[0].split("|")):
                         if idx in my_id_product:
                             # Город продукт район подрайон
-                            btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{idx}_{id_product[2]}_{id_product[3]}'}])
+                            btn['keyboard'].insert(i, [{'text': f'{products.split("(")[0]} /district_{id_product[1]}_{id_product[2]}_{idx}_{id_product[3]}'}])
                             i += 1
                             text += f"📦 {products.split('(')[0]}\n<b>{products.split('(')[1][:-1]}</b>\n<b>+ скидка до {discount_product}%</b>\n<i>Заказать 👉 /district_{id_product[1]}_{id_product[2]}_{idx}_{id_product[3]}</i>\n- - - - - - - - - - - - - - - -\n"
                     text = "\n".join(text.split("\n")[:-2]) + "\n"
